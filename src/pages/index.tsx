@@ -2,17 +2,38 @@ import { useState } from 'react'
 import ChatRoom from '../components/ChatRoom'
 
 export default function Home() {
-    const [chats, setChats] = useState<Array<{ id: number; title: string }>>([
-        { id: 1, title: '새로운 채팅' }
-    ])
+    const [chats, setChats] = useState<
+        Array<{
+            id: number
+            title: string
+            messages: Array<{ role: string; content: string }>
+        }>
+    >([{ id: 1, title: '새로운 채팅', messages: [] }])
     const [currentChatId, setCurrentChatId] = useState(1)
 
     const createNewChat = () => {
         const newChatId = chats.length + 1
-        const newChat = { id: newChatId, title: `새로운 채팅 ${newChatId}` }
+        const newChat = {
+            id: newChatId,
+            title: `새로운 채팅 ${newChatId}`,
+            messages: []
+        }
         setChats([...chats, newChat])
         setCurrentChatId(newChatId)
     }
+
+    const updateMessages = (
+        chatId: number,
+        newMessages: Array<{ role: string; content: string }>
+    ) => {
+        setChats(prevChats =>
+            prevChats.map(chat =>
+                chat.id === chatId ? { ...chat, messages: newMessages } : chat
+            )
+        )
+    }
+
+    const currentChat = chats.find(chat => chat.id === currentChatId)
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -40,7 +61,13 @@ export default function Home() {
             </div>
 
             {/* Chat Interface */}
-            <ChatRoom chatId={currentChatId} />
+            {currentChat && (
+                <ChatRoom
+                    chatId={currentChatId}
+                    messages={currentChat.messages}
+                    updateMessages={updateMessages}
+                />
+            )}
         </div>
     )
 }

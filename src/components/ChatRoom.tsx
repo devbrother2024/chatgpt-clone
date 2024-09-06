@@ -1,27 +1,29 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import axios from 'axios'
 
 interface ChatRoomProps {
     chatId: number
+    messages: Array<{ role: string; content: string }>
+    updateMessages: (
+        chatId: number,
+        newMessages: Array<{ role: string; content: string }>
+    ) => void
 }
 
-export default function ChatRoom({ chatId }: ChatRoomProps) {
+export default function ChatRoom({
+    chatId,
+    messages,
+    updateMessages
+}: ChatRoomProps) {
     const [input, setInput] = useState('')
-    const [messages, setMessages] = useState<
-        Array<{ role: string; content: string }>
-    >([])
-
-    useEffect(() => {
-        // 채팅방이 변경될 때마다 메시지 초기화
-        setMessages([])
-    }, [chatId])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!input.trim()) return
 
         const newMessage = { role: 'user', content: input }
-        setMessages(prevMessages => [...prevMessages, newMessage])
+        const updatedMessages = [...messages, newMessage]
+        updateMessages(chatId, updatedMessages)
 
         try {
             const response = await axios.post('/api/chat', { message: input })
@@ -29,7 +31,7 @@ export default function ChatRoom({ chatId }: ChatRoomProps) {
                 role: 'assistant',
                 content: response.data.choices[0].message.content
             }
-            setMessages(prevMessages => [...prevMessages, assistantMessage])
+            updateMessages(chatId, [...updatedMessages, assistantMessage])
         } catch (error) {
             console.error('Error:', error)
         }
